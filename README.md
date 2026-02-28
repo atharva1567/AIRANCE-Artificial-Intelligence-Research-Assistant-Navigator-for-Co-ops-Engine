@@ -23,7 +23,7 @@ AIRANCE remembers each user’s preferences and uses them to detect new postings
 Compares newly scraped jobs against previously seen ones to identify only fresh opportunities.
 
 **Professional HTML Email Reports:**  
-Sends polished, LinkedIn‑style job‑alert emails from airance@gmail.com with:
+Sends polished, LinkedIn‑style job‑alert emails from Airance.V2@gmail.com with:
 
 - Job titles
 - Companies
