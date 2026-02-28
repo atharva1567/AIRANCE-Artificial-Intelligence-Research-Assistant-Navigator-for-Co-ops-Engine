@@ -3,6 +3,7 @@
 import json
 import os
 import time
+import sqlite3
 from tabulate import tabulate
 from selenium.webdriver.common.by import By
 
@@ -12,11 +13,15 @@ from job_fetcher import (
     open_source_tabs
 )
 
-USERS_FILE = "users.json"
+from user import create_account, login
+from database import init_db
+from config import DB_FILE
+from emailer import send_email
+
 SAVED_JOBS_FILE = "saved_jobs.json"
 
 # ==========================
-# JSON STORAGE
+# JSON STORAGE (for saved jobs)
 # ==========================
 
 def load_json(path, default):
@@ -39,7 +44,6 @@ def save_json(path, data):
 def truncate(text, max_len=40):
     text = "" if text is None else str(text)
     return text if len(text) <= max_len else text[:max_len - 3] + "..."
-
 
 def display_jobs_table(jobs, show_status=False):
     table = []
@@ -78,34 +82,142 @@ def open_job_in_browser(job):
     print("You can view the full job details directly on the website.\n")
 
 # ==========================
-# ACCOUNT SYSTEM
+# SAVE USER PREFERENCES
 # ==========================
 
-def create_account(users):
-    print("\n=== Create Account ===")
-    username = input("Enter username: ").strip()
-    if username in users:
-        print("❌ Username already exists.")
-        return users
+def save_user_preferences(username, field, location, job_type):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
 
-    password = input("Enter password: ").strip()
-    users[username] = {"password": password}
-    save_json(USERS_FILE, users)
-    print(f"✅ Account created for {username}")
-    return users
+    c.execute("""
+        INSERT OR REPLACE INTO user_preferences (user_id, field, location, job_type)
+        VALUES (
+            (SELECT id FROM users WHERE username=?),
+            ?, ?, ?
+        )
+    """, (username, field, location, job_type))
 
+    conn.commit()
+    conn.close()
 
-def login(users):
-    print("\n=== Login ===")
-    username = input("Enter username: ").strip()
-    password = input("Enter password: ").strip()
+# ==========================
+# CHECK FOR NEW JOBS + EMAIL ALERT
+# ==========================
 
-    if username in users and users[username]["password"] == password:
-        print(f"✅ Welcome back, {username}!")
-        return username
+def check_for_new_jobs(username):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
 
-    print("❌ Invalid username or password.")
-    return None
+    # Get user ID + email
+    c.execute("SELECT id, email FROM users WHERE username=?", (username,))
+    row = c.fetchone()
+    if not row:
+        conn.close()
+        return
+
+    user_id, user_email = row
+
+    # Get saved preferences
+    c.execute("SELECT field, location, job_type FROM user_preferences WHERE user_id=?", (user_id,))
+    prefs = c.fetchone()
+
+    if not prefs:
+        conn.close()
+        return  # No saved search yet
+
+    field, location, job_type = prefs
+
+    # Fetch jobs
+    jobs = fetch_all_jobs(field, location, job_type)
+
+    # Get previously seen job links
+    c.execute("SELECT link FROM jobs WHERE user_id=?", (user_id,))
+    seen_links = {row[0] for row in c.fetchall()}
+
+    # Filter new jobs
+    new_jobs = [job for job in jobs if job["link"] not in seen_links]
+
+    if not new_jobs:
+        conn.close()
+        return  # No new jobs → no email
+
+    # Save new jobs to DB
+    for job in new_jobs:
+        c.execute("""
+            INSERT INTO jobs (title, company, location, source, link, user_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            job["title"], job["company"], job["location"],
+            job["source"], job["link"], user_id
+        ))
+
+    conn.commit()
+    conn.close()
+
+    # Build rows
+    rows = ""
+    for job in new_jobs:
+        rows += f"""
+        <tr>
+            <td style="padding: 10px; border: 1px solid #ddd;">{job['title']}</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">{job['company']}</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">{job['location']}</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">{job['source']}</td>
+            <td style="padding: 10px; border: 1px solid #ddd;">
+                <a href="{job['link']}" style="color: #1a73e8;">View</a>
+            </td>
+        </tr>
+        """
+
+    # Professional HTML email
+    html = f"""
+    <div style="font-family: Arial, sans-serif; padding: 20px; background: #f7f7f7;">
+        <div style="max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+            <h2 style="color: #4A4A4A; text-align: center; margin-bottom: 10px;">
+                🔔 New Job Matches for You
+            </h2>
+
+            <p style="font-size: 15px; color: #555;">
+                Based on your saved preferences:
+            </p>
+
+            <ul style="font-size: 15px; color: #333; line-height: 1.6;">
+                <li><strong>Field:</strong> {field}</li>
+                <li><strong>Location:</strong> {location}</li>
+                <li><strong>Job Type:</strong> {job_type}</li>
+            </ul>
+
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+            <h3 style="color: #333; margin-bottom: 10px;">📄 New Job Postings</h3>
+
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background: #f0f0f0;">
+                    <th style="padding: 10px; border: 1px solid #ddd;">Title</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">Company</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">Location</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">Source</th>
+                    <th style="padding: 10px; border: 1px solid #ddd;">Link</th>
+                </tr>
+                {rows}
+            </table>
+
+            <p style="font-size: 14px; color: #777; margin-top: 25px; text-align: center;">
+                This message was sent automatically by AIRANCE Job Alerts.
+            </p>
+
+        </div>
+    </div>
+    """
+
+    send_email(
+        to_address=user_email,
+        subject="New Job Postings for You",
+        body=html
+    )
+
+    print(f"\n📧 New job postings emailed to {user_email}!\n")
 
 # ==========================
 # USER SESSION
@@ -125,14 +237,14 @@ def user_session(username):
 
         choice = input("Choose an option (1-6): ").strip()
 
-        # -------------------------
         # SEARCH JOBS
-        # -------------------------
-
         if choice == "1":
             field = input("Internship Field: ").strip()
             location = input("Location: ").strip()
             job_type = input("Full-time/Co-op/Any: ").strip()
+
+            # Save preferences for job alerts
+            save_user_preferences(username, field, location, job_type)
 
             print("\nOpening browser tabs...")
             open_source_tabs(field, location, job_type)
@@ -140,11 +252,14 @@ def user_session(username):
             print("Fetching job listings...\n")
             jobs = fetch_all_jobs(field, location, job_type)
 
+            # Check for new jobs + email alert (only if new)
+            check_for_new_jobs(username)
+
             if not jobs:
                 print("❌ No jobs found.")
                 continue
 
-            display_jobs_table(jobs, show_status=False)
+            display_jobs_table(jobs)
 
             while True:
                 print("\nOptions:")
@@ -182,10 +297,7 @@ def user_session(username):
                     except:
                         print("❌ Invalid choice.")
 
-        # -------------------------
         # VIEW SAVED JOBS
-        # -------------------------
-
         elif choice == "2":
             user_jobs = [j for j in saved_jobs if j["username"] == username]
             if not user_jobs:
@@ -208,9 +320,7 @@ def user_session(username):
             except:
                 print("❌ Invalid input.")
 
-        # -------------------------
         # OPEN SAVED JOB
-        # -------------------------
         elif choice == "3":
             user_jobs = [j for j in saved_jobs if j["username"] == username]
             if not user_jobs:
@@ -233,10 +343,7 @@ def user_session(username):
             except:
                 print("❌ Invalid input.")
 
-        # -------------------------
         # UPDATE STATUS
-        # -------------------------
-
         elif choice == "4":
             user_jobs = [j for j in saved_jobs if j["username"] == username]
             if not user_jobs:
@@ -262,10 +369,7 @@ def user_session(username):
             except:
                 print("❌ Invalid input.")
 
-        # -------------------------
         # DELETE SAVED JOB(S)
-        # -------------------------
-
         elif choice == "5":
             user_jobs = [j for j in saved_jobs if j["username"] == username]
             if not user_jobs:
@@ -299,9 +403,7 @@ def user_session(username):
             else:
                 print("❌ No valid job numbers entered.")
 
-        # -------------------------
         # LOGOUT
-        # -------------------------
         elif choice == "6":
             break
 
@@ -310,7 +412,7 @@ def user_session(username):
 # ==========================
 
 def main_menu():
-    users = load_json(USERS_FILE, {})
+    init_db()
 
     while True:
         print("\n=== AIRANCE - AI Internship Assistant ===")
@@ -321,11 +423,27 @@ def main_menu():
         choice = input("Choose an option (1-3): ").strip()
 
         if choice == "1":
-            users = create_account(users)
+            print("\n=== Create Account ===")
+            email = input("Enter email: ").strip()
+            username = input("Enter username: ").strip()
+            password = input("Enter password: ").strip()
+
+            success, message = create_account(email, username, password)
+            print(message)
+
         elif choice == "2":
-            username = login(users)
-            if username:
+            print("\n=== Login ===")
+            email = input("Enter email: ").strip()
+            password = input("Enter password: ").strip()
+
+            user = login(email, password)
+            if user:
+                username = user[2]
+                print(f"Welcome back, {username}!")
                 user_session(username)
+            else:
+                print("Invalid email or password.")
+
         elif choice == "3":
             print("Goodbye 👋")
             break
