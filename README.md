@@ -1,9 +1,9 @@
 # AIRANCE Artificial Intelligence Research Assistant Navigator for Co-ops Engine
-AIRANCE (Artificial Intelligence Research Assistant Navigator for Co‑ops Engine) is a full‑stack, terminal‑based job‑search automation system designed for students and early‑career engineers. It combines real‑time web scraping, personalized job‑alert intelligence, and a clean account‑based workflow to help users discover internships, co‑ops, and full‑time roles faster and more efficiently.
+AIRANCE (Artificial Intelligence Research Assistant Navigator for Co‑ops Engine) is a full‑stack, terminal‑based job‑search automation system designed for students and early‑career individuals. It combines real‑time web scraping, personalized job‑alert intelligence, and a clean account‑based workflow to help users discover internships, co‑ops, and full‑time roles faster and more efficiently.
 
 AIRANCE automatically logs into LinkedIn, scrapes both LinkedIn and Indeed for fresh postings, displays results in a structured table, and lets users save jobs, track application status, and open listings directly in the browser. Each user has a personal account with a saved search profile (field, location, job type), enabling AIRANCE to detect new postings that match their preferences.
 
-AIRANCE also generates a polished, professional HTML report and emails it directly to the user’s real email address using a secure Gmail App Password. This transforms AIRANCE from a simple scraper into a proactive job‑alert engine—similar to LinkedIn Job Alerts, but fully customizable and running locally.
+AIRANCE also generates a polished, professional HTML report and emails it directly to the user’s real email address using a secure Gmail App Password. This transforms AIRANCE from a simple scraper into a proactive job‑alert engine—similar to LinkedIn Job Alerts, but fully customizable and runs locally.
 
 # Key Features
 
