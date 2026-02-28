@@ -4,6 +4,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from config import LINKEDIN_EMAIL, LINKEDIN_PASSWORD
 
 driver = None
 
@@ -19,10 +20,33 @@ def init_driver():
     return driver
 
 # -----------------------------
-# OPEN ONLY LINKEDIN + INDEED
+# LINKEDIN LOGIN
+# -----------------------------
+def linkedin_login():
+    init_driver()
+    driver.get("https://www.linkedin.com/login")
+    time.sleep(2)
+
+    try:
+        email_box = driver.find_element(By.ID, "username")
+        pass_box = driver.find_element(By.ID, "password")
+
+        email_box.send_keys(LINKEDIN_EMAIL)
+        pass_box.send_keys(LINKEDIN_PASSWORD)
+
+        driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+        time.sleep(3)
+    except Exception as e:
+        print("LinkedIn login failed:", e)
+
+# -----------------------------
+# OPEN TABS (LinkedIn + Indeed)
 # -----------------------------
 def open_source_tabs(field, location, job_type):
     init_driver()
+
+    # Login first so LinkedIn job cards load
+    linkedin_login()
 
     query = f"{field} {job_type}"
 
@@ -33,9 +57,9 @@ def open_source_tabs(field, location, job_type):
 
     # Open LinkedIn first
     driver.get(urls["linkedin"])
-    time.sleep(2)
+    time.sleep(3)
 
-    # Open Indeed
+    # Open Indeed in new tab
     driver.execute_script("window.open('');")
     driver.switch_to.window(driver.window_handles[-1])
     driver.get(urls["indeed"])
@@ -97,7 +121,7 @@ def fetch_linkedin(field, location, job_type):
 
     time.sleep(2)
 
-    # Close cookie or login popups
+    # Close popups
     for sel in [
         "button[aria-label='Dismiss']",
         "button.artdeco-modal__dismiss",
@@ -109,7 +133,7 @@ def fetch_linkedin(field, location, job_type):
         except:
             pass
 
-    # Scroll multiple times to force job cards to load
+    # Scroll to load job cards
     for _ in range(5):
         driver.execute_script("window.scrollBy(0, 800);")
         time.sleep(1)
@@ -117,11 +141,11 @@ def fetch_linkedin(field, location, job_type):
     jobs = []
     cards = driver.find_elements(By.CSS_SELECTOR, "li.jobs-search-results__list-item")
 
-    # If still empty, try fallback selector
+    # Fallback selector
     if not cards:
         cards = driver.find_elements(By.CSS_SELECTOR, "ul.jobs-search__results-list li")
 
-    for card in cards[:5]:
+    for card in cards[:10]:
         title = _extract(card, ["h3", ".base-search-card__title"])
         company = _extract(card, ["h4", ".base-search-card__subtitle"])
         loc = _extract(card, [".job-search-card__location"])
@@ -152,7 +176,7 @@ def fetch_indeed(field, location, job_type):
     jobs = []
     cards = driver.find_elements(By.CSS_SELECTOR, "div.job_seen_beacon, a.tapItem")
 
-    for card in cards[:5]:
+    for card in cards[:10]:
         title = _extract(card, ["h2.jobTitle", "h2"])
         company = _extract(card, ["span.companyName", "span[data-testid='company-name']"])
         loc = _extract(card, ["div.companyLocation", "div[data-testid='text-location']"])
