@@ -10,19 +10,19 @@ AIRANCE also generates a polished, professional HTML report and emails it direct
 **Account System with SQLite:**  
 Users create accounts with real emails, enabling personalized job tracking and email alerts.
 
-Automated LinkedIn Login:  
+**Automated LinkedIn Login:** 
 AIRANCE logs into LinkedIn programmatically to access full job listings.
 
-Real‑Time Scraping (LinkedIn + Indeed):  
+**Real‑Time Scraping (LinkedIn + Indeed):** 
 Fetches fresh postings based on field, location, and job type.
 
-Saved Search Profiles:  
+**Saved Search Profiles:**  
 AIRANCE remembers each user’s preferences and uses them to detect new postings.
 
-New‑Job Detection Engine:  
+**New‑Job Detection Engine:**  
 Compares newly scraped jobs against previously seen ones to identify only fresh opportunities.
 
-Professional HTML Email Reports:  
+**Professional HTML Email Reports:**  
 Sends polished, LinkedIn‑style job‑alert emails from airance@gmail.com with:
 
 - Job titles
@@ -32,8 +32,8 @@ Sends polished, LinkedIn‑style job‑alert emails from airance@gmail.com with:
 - Direct apply links
 - Clean, responsive formatting
 
-Job Management Tools:  
+**Job Management Tools:**  
 Save jobs, update application status, delete entries, and open listings in the browser.
 
-Terminal‑Based UI:  
+**Terminal‑Based UI:**  
 Clean, simple, and fast—optimized for developers and students.
