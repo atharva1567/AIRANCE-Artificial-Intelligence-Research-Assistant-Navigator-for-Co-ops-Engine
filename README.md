@@ -7,7 +7,7 @@ AIRANCE also generates a polished, professional HTML report and emails it direct
 
 # Key Features
 
-Account System with SQLite:  
+**Account System with SQLite:**  
 Users create accounts with real emails, enabling personalized job tracking and email alerts.
 
 Automated LinkedIn Login:  
