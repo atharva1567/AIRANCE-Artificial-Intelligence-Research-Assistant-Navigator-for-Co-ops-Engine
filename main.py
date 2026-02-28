@@ -5,7 +5,9 @@ import os
 import time
 import sqlite3
 from tabulate import tabulate
-from selenium.webdriver.common.by import By
+
+import sys
+import threading
 
 from job_fetcher import (
     fetch_all_jobs,
@@ -19,6 +21,35 @@ from config import DB_FILE
 from emailer import send_email
 
 SAVED_JOBS_FILE = "saved_jobs.json"
+
+# ==========================
+# LOADING BAR
+# ==========================
+
+loading = False
+
+def loading_bar(text):
+    def animate():
+        bar_length = 30
+        pct = 0
+
+        while loading:
+            pct = min(pct + 2, 98)  # smoothly fill up to 98%
+            filled = int((pct / 100) * bar_length)
+            bar = "█" * filled + "-" * (bar_length - filled)
+            sys.stdout.write(f"\r{text} [{bar}] {pct}%")
+            sys.stdout.flush()
+            time.sleep(0.05)
+
+        # Final full bar at 100%
+        pct = 100
+        bar = "█" * bar_length
+        sys.stdout.write(f"\r{text} [{bar}] {pct}%\n")
+        sys.stdout.flush()
+
+    t = threading.Thread(target=animate)
+    t.start()
+    return t
 
 # ==========================
 # JSON STORAGE (for saved jobs)
@@ -246,11 +277,20 @@ def user_session(username):
             # Save preferences for job alerts
             save_user_preferences(username, field, location, job_type)
 
-            print("\nOpening browser tabs...")
+            # Opening browser tabs (actually opens LinkedIn + Indeed)
+            global loading
+            loading = True
+            t = loading_bar("Opening browser tabs")
             open_source_tabs(field, location, job_type)
+            loading = False
+            t.join()
 
-            print("Fetching job listings...\n")
+            # Fetching job listings (scraping both sites)
+            loading = True
+            t = loading_bar("Fetching job listings")
             jobs = fetch_all_jobs(field, location, job_type)
+            loading = False
+            t.join()
 
             # Check for new jobs + email alert (only if new)
             check_for_new_jobs(username)
