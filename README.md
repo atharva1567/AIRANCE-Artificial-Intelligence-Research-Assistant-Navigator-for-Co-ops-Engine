@@ -37,3 +37,10 @@ Save jobs, update application status, delete entries, and open listings in the b
 
 **Terminal‑Based UI:**  
 Clean, simple, and fast—optimized for developers and students.
+
+# Demo
+Below are snapshots of AIRANCE's workflow and logic
+
+<img width="1470" height="956" alt="Screenshot 2026-03-02 at 5 28 30 PM" src="https://github.com/user-attachments/assets/761a7516-94fa-4f01-ac8e-1b144e3230d8" />
+
+<img width="430" height="672" alt="Screenshot 2026-03-02 at 5 38 26 PM" src="https://github.com/user-attachments/assets/3b0e76f7-dfaf-4aa6-8467-d44ad48594f1" />
