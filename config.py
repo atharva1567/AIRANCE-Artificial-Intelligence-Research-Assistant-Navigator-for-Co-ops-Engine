@@ -4,7 +4,7 @@
 LINKEDIN_EMAIL = "athava.ghodke@gmail.com"
 LINKEDIN_PASSWORD = "Vasu@123"
 
-# Email sender (AIRANCE Gmail) #OR PERSONAL EMAIL
+# Email sender (AIRANCE Gmail) #OR PERSONAL EMAIL 
 EMAIL_ADDRESS = "_________@gmail.com"
 
 # (REQUIRED 16-Digit) Gmail App Password:
