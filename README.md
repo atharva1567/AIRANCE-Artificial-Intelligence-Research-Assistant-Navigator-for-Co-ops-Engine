@@ -77,17 +77,17 @@ airance/
 ## 🧠 How It Works
 AIRANCE runs in 4 stages:
 
-Scrape  
-Selenium navigates LinkedIn & Indeed, collecting job titles, companies, locations, dates, and links.
+1. Scrape  
+   Selenium navigates LinkedIn & Indeed, collecting job titles, companies, locations, dates, and links.
 
-Normalize  
-Data is cleaned and converted into a consistent structure.
+2. Normalize  
+   Data is cleaned and converted into a consistent structure.
 
-Detect New Jobs  
-SQLite stores previously seen jobs; new ones are flagged instantly.
+3. Detect New Jobs  
+   SQLite stores previously seen jobs; new ones are flagged instantly.
 
-Notify  
-A clean, human‑readable job report is generated and emailed to the user.
+4. Notify  
+   A clean, human‑readable job report is generated and emailed to the user.
 
 This workflow turns hours of manual searching into a fully automated pipeline.
 
