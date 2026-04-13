@@ -1,11 +1,13 @@
-# AIRANCE Artificial Intelligence Research Assistant Navigator for Co-ops Engine
+# AIRANCE ⚡ Artificial Intelligence Research Assistant Navigator for Co-ops Engine
 AIRANCE (Artificial Intelligence Research Assistant Navigator for Co‑ops Engine) is a full‑stack, terminal‑based job‑search automation system designed for students and early‑career individuals. It combines real‑time web scraping, personalized job‑alert intelligence, and a clean account‑based workflow to help users discover internships, co‑ops, and full‑time roles faster and more efficiently.
 
 AIRANCE automatically logs into LinkedIn, scrapes both LinkedIn and Indeed for fresh postings, displays results in a structured table, and lets users save jobs, track application status, and open listings directly in the browser. Each user has a personal account with a saved search profile (field, location, job type), enabling AIRANCE to detect new postings that match their preferences.
 
 AIRANCE also generates a polished, professional HTML report and emails it directly to the user’s real email address using a secure Gmail App Password. This transforms AIRANCE from a simple scraper into a proactive job‑alert engine—similar to LinkedIn Job Alerts, but fully customizable and runs locally.
 
-# Key Features
+---
+
+## ✨ Key Features
 
 **Account System with SQLite:**  
 Users create accounts with real emails, enabling personalized job tracking and email alerts.
@@ -37,6 +39,85 @@ Save jobs, update application status, delete entries, and open listings in the b
 
 **Terminal‑Based UI:**  
 Clean, simple, and fast—optimized for developers and students.
+
+---
+
+## 🚀 Getting Started
+
+1. Download or clone the repo
+
+2. Install Dependencies
+pip install -r requirements.txt
+
+3. Install ChromeDriver
+Download the ChromeDriver version that matches your Chrome browser and place it in the project folder.
+
+4. Run AIRANCE; python3 main.py 
+AIRANCE will launch Selenium, scrape job boards, detect new postings, update the database, and email you a report.
+
+---
+
+## 📁 Project Structure
+
+```
+airance/
+├── main.py               # Entry point
+├── scraper.py            # Selenium scraping logic
+├── database.py           # SQLite models & job tracking
+├── email_handler.py      # Email report generator
+├── config/               # User preferences & settings
+├── drivers/              # ChromeDriver / EdgeDriver
+├── reports/              # Generated job reports
+├── airance.db            # Local database
+└── README.md             # You are here
+```
+
+---
+
+## 🧠 How It Works
+AIRANCE runs in 4 stages:
+
+Scrape  
+Selenium navigates LinkedIn & Indeed, collecting job titles, companies, locations, dates, and links.
+
+Normalize  
+Data is cleaned and converted into a consistent structure.
+
+Detect New Jobs  
+SQLite stores previously seen jobs; new ones are flagged instantly.
+
+Notify  
+A clean, human‑readable job report is generated and emailed to the user.
+
+This workflow turns hours of manual searching into a fully automated pipeline.
+
+---
+
+## 🧪 Tech Stack
+Python — core logic
+
+Selenium — browser automation
+
+SQLite — persistent job tracking
+
+SMTP / Email — job‑alert delivery
+
+JSON / Config files — user preferences
+
+---
+
+## 🛠️ Future Roadmap
+Web dashboard (React + FastAPI)
+
+Background scheduler for daily runs
+
+Multi‑platform scraping (Glassdoor, ZipRecruiter, etc.)
+
+Analytics: job trends, platform breakdowns
+
+Cloud deployment
+
+---
 
 # Demo
 Below are snapshots of AIRANCE's workflow and logic
